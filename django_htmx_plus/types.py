@@ -1,0 +1,21 @@
+from enum import StrEnum
+
+class Filter(StrEnum):
+    EQ = 'exact'
+    IEQ = 'iexact'
+    GT = 'gt'
+    GTE = 'gte'
+    LT = 'lt'
+    LTE = 'lte'
+    LIKE = 'like'
+    ILIKE = 'ilike'
+    CS = 'cs'
+    ICS = 'ics'
+    IN = 'in'
+    NL = 'isnull'
+    RNG = 'range'
+    EW = 'endswith'
+    IEW = 'iendswith'
+    SW = 'startswith'
+    ISW = 'istartswith'
+    SCH = 'search'

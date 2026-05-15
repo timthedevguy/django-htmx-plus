@@ -1,0 +1,15 @@
+<th class="cursor-pointer {{ add_class }}" hx-get="{{ path }}{% if page_obj %}?page={{ page_obj.number }}&{% else %}?{% endif %}{% if filter_query %}{{ filter_query }}&{% endif %}order_by={% if name == order_by %}-{{ name }}{% else %}{{ name }}{% endif %}"
+	hx-target="{{ target_id }}">
+	<div class="d-flex">
+		<div class="flex-grow-1 align-bottom mt-1">
+			{{ slot }}
+		</div>
+		{% if order_by %}
+			{% if name == order_by %}
+				<c-icons.chevron_up add_class="ms-1"/>
+			{% elif "-"|add:name == order_by %}
+				<c-icons.chevron_down add_class="ms-1"/>
+			{% endif %}
+		{% endif %}
+	</div>
+</th>

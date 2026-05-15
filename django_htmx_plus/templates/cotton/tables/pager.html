@@ -1,0 +1,35 @@
+
+<div class="d-flex justify-content-center justify-content-sm-between">
+	<div class="align-items-center">
+		<p class="m-0 text-secondary">Showing <strong>{{ page_obj.start_index }} to {{ page_obj.end_index }}</strong> of
+			<strong>{{ page_obj.paginator.count }} entries</strong></p>
+	</div>
+	<div class="justify-content-end">
+		<ul class="pagination" hx-target="{{ target_id }}">
+			<li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+				<button type="button" class="page-link"
+						{% if page_obj.has_previous %}hx-get="{{ request.path }}?page={{ page_obj.previous_page_number }}&{{ query }}"{% endif %}
+						tabindex="-1" aria-disabled="true">
+					<c-icons.chevron_left/>
+				</button>
+			</li>
+			{% for page in page_range %}
+				<li class="page-item {% if page_obj.number == page %}active{% endif %}">
+					{% if page == page_obj.paginator.ELLIPSIS %}
+						<span class="page-link h-100">{{ page }}</span>
+					{% else %}
+						<button type="button" class="h-100 page-link {% if page_obj.number == page %}active{% endif %}"
+								hx-get="{{ request.path }}?page={{ page }}&{{ query }}">{{ page }}</button>
+					{% endif %}
+				</li>
+			{% endfor %}
+			<li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+				<button type="button" class="page-link"
+						{% if page_obj.has_next %}hx-get="{{ request.path }}?page={{ page_obj.next_page_number }}&{{ query }}"{% endif %}
+						tabindex="-1" aria-disabled="true">
+					<c-icons.chevron_right/>
+				</button>
+			</li>
+		</ul>
+	</div>
+</div>

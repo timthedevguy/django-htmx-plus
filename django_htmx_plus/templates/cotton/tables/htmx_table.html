@@ -1,0 +1,22 @@
+{% load cotton_extras %}
+<div class="htmx-table-wrap">
+<table class="{{class}}">
+	<thead>
+		{% for field in fields.keys %}
+			<c-tables.header_cell name="{{ field }}">{% if field in fields.labels %}{{ fields.labels|get_key_value:field }}{% else %}{{field|capfirst}}{% endif %}</c-tables.header_cell>
+		{% endfor %}
+	</thead>
+	<tbody>
+	{% for item in objects %}
+		<tr>
+			{% for field in fields.keys %}
+				<td>{{ item|get_key_value:field }}</td>
+			{% endfor %}
+		</tr>
+	{% endfor %}
+	</tbody>
+</table>
+</div>
+{% if paginator %}
+<c-tables.pager />
+{% endif %}

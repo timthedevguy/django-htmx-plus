@@ -1,0 +1,40 @@
+[project]
+name = "django-htmx-plus"
+version = "0.1.0"
+description = "django-htmx plus some extras"
+authors = [
+    {name = "Tim Davis",email = "binary.god@gmail.com"}
+]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = "^3.11"
+dependencies = [
+    "django-cotton (>=2.6.2,<3.0.0)",
+    "django-htmx (>=1.27.0,<2.0.0)"
+]
+
+[tool.poetry.scripts]
+tests = "run_tests:main"
+
+[tool.black]
+line-length = 120
+target-version = ["py311"]
+
+[tool.isort]
+profile = "black"
+py_version = 311
+line_length = 120
+
+[tool.pylint.format]
+max-line-length = "120"
+
+[tool.ruff]
+line-length = 120
+
+[tool.poetry.group.dev.dependencies]
+black = "^26.3.1"
+pylint = "^4.0.5"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
