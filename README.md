@@ -2,6 +2,10 @@
 
 A Django utility library that extends [django-htmx](https://github.com/adamchainz/django-htmx) and [django-cotton](https://github.com/wrabit/django-cotton) with ready-made views, mixins, middleware, response helpers, and Cotton components for building HTMX-powered list views with filtering, sorting, and pagination.
 
+This package was created for my own projects but it was handy enough to share, I learned how to use HTMX with Django and Boostrap Modals from the following two posts from [Josh Karamuth](https://www.linkedin.com/in/josh-karamuth/): 
+* [How to show a modal in Django + HTMX](https://joshkaramuth.com/blog/django-htmx-modal/)
+* [Show Django forms inside a modal using HTMX](https://joshkaramuth.com/blog/django-htmx-modal-forms/)
+
 ---
 
 ## Features
