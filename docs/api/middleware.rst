@@ -22,8 +22,8 @@ Add to your ``MIDDLEWARE`` setting:
 
     MIDDLEWARE = [
         # ...
-        "django_htmx.middleware.HtmxMiddleware",        # required by django-htmx
-        "django_htmx_plus.middleware.HtmxMessagesMiddleware",
+        "django.contrib.messages.middleware.MessageMiddleware"
+        "django_htmx_plus.middleware.HtmxMessagesMiddleware", # <-- Add this middleware after MessageMiddleware
     ]
 
 Behavior

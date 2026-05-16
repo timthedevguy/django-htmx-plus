@@ -1,6 +1,6 @@
 # django-htmx-plus
 
-A Django utility library that extends [django-htmx](https://github.com/adamchainz/django-htmx) and [django-cotton](https://github.com/wrabit/django-cotton) with ready-made views, mixins, middleware, response helpers, and Cotton components for building HTMX-powered list views with filtering, sorting, and pagination.
+A Django utility library that works with [django-cotton](https://github.com/wrabit/django-cotton) to provide ready-made views, mixins, middleware, response helpers, and components for building HTMX-powered list views with filtering, sorting, and pagination.
 
 This package was created for my own projects but it was handy enough to share, I learned how to use HTMX with Django and Boostrap Modals from the following two posts from [Josh Karamuth](https://www.linkedin.com/in/josh-karamuth/): 
 * [How to show a modal in Django + HTMX](https://joshkaramuth.com/blog/django-htmx-modal/)
@@ -26,7 +26,6 @@ This package was created for my own projects but it was handy enough to share, I
 
 - Python 3.11+
 - Django (any version compatible with the above)
-- [django-htmx](https://github.com/adamchainz/django-htmx) ≥ 1.27
 - [django-cotton](https://github.com/wrabit/django-cotton) ≥ 2.6
 
 ---
@@ -42,14 +41,12 @@ Add to `INSTALLED_APPS` and configure middleware in `settings.py`:
 ```python
 INSTALLED_APPS = [
     # ...
-    "django_htmx",
     "django_cotton",
     "django_htmx_plus",
 ]
 
 MIDDLEWARE = [
     # ...
-    "django_htmx.middleware.HtmxMiddleware",        # required by django-htmx
     "django_htmx_plus.middleware.HtmxMessagesMiddleware",
 ]
 ```

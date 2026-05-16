@@ -7,7 +7,7 @@
 		{% endfor %}
 	</thead>
 	<tbody>
-	{% for item in objects %}
+	{% for item in object_list %}
 		<tr>
 			{% for field in fields.keys %}
 				<td>{{ item|get_key_value:field }}</td>

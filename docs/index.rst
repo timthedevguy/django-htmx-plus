@@ -2,7 +2,7 @@
 django-htmx-plus
 ==================
 
-A Django utility library that extends `django-htmx <https://github.com/adamchainz/django-htmx>`_ and `django-cotton <https://github.com/wrabit/django-cotton>`_ with ready-made views, mixins, middleware, response helpers, and Cotton components for building HTMX-powered list views with filtering, sorting, and pagination.
+A Django utility library that works with `django-cotton <https://github.com/wrabit/django-cotton>`_ to provide ready-made views, mixins, middleware, response helpers, and components for building HTMX-powered list views with filtering, sorting, and pagination.
 
 .. toctree::
    :maxdepth: 2
@@ -43,9 +43,3 @@ A Django utility library that extends `django-htmx <https://github.com/adamchain
    license
    ai_usage
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

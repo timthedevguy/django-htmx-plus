@@ -63,14 +63,9 @@ autodoc_typehints = "description"
 # html_logo = "logo.svg"
 html_theme = "shibuya"
 html_theme_options = {
-    "dark_css_variables": {
-        "admonition-font-size": "100%",
-        "admonition-title-font-size": "100%",
-    },
-    "light_css_variables": {
-        "admonition-font-size": "100%",
-        "admonition-title-font-size": "100%",
-    },
+    "accent_color": "blue",
+    "dark_code": True,
+    "github_url": "https://github.com/timthedevguy/django-htmx-plus"
 }
 
 # -- Options for LaTeX output ------------------------------------------

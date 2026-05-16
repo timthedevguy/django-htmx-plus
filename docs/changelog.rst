@@ -4,6 +4,13 @@ Changelog
 
 This page documents all releases of django-htmx-plus.
 
+[0.2.0] - 2024-05-16
+====================
+Fixes
+-----
+- Removed dependency on ``django-htmx`` to simplify installation
+- Updated documentation
+
 [0.1.0] - 2024-05-16
 ====================
 

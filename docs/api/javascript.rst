@@ -78,14 +78,14 @@ Modal Configuration
 Mark Modal Elements
 ~~~~~~~~~~~~~~~~~~~
 
-Add ``data-htmx-plus-modal="<target_id>"`` to the modal root element, where ``target_id`` is the ID of the element that will be swapped:
+Add ``data-htmx-plus-modal="<target_id>"`` to the modal root element, where ``target_id`` is the ID of the element that will be swapped, this is also the ID that you will use in ``hx-target`` to show content in the dialog.
 
 .. code-block:: html
 
-    <!-- Bootstrap Modal -->
-    <div class="modal modal-blur fade" id="modal" data-htmx-plus-modal="dialog" tabindex="-1" style="display: none;" aria-hidden="true">
-		<div id="dialog" class="modal-dialog modal-dialog-scrollable htmx-plus-modal" role="document" hx-target="this"></div>
-	</div>
+   <!-- Bootstrap Modal -->
+   <div class="modal modal-blur fade" id="modal" data-htmx-plus-modal="dialog" tabindex="-1" style="display: none;" aria-hidden="true">
+      <div id="dialog" class="modal-dialog modal-dialog-scrollable htmx-plus-modal" role="document" hx-target="this"></div>
+   </div>
 
 Create HTMX Triggers
 ~~~~~~~~~~~~~~~~~~~~
@@ -97,6 +97,9 @@ Point HTMX elements at the matching target ID:
     <button class="btn btn-primary" hx-get="/person/add/" hx-target="#dialog">
         Add Person
     </button>
+
+.. note::
+   Please note that the ``hx-target`` should point to the element with the ID specified in ``data-htmx-plus-modal``, and should include the '#' (required by HTMX)
 
 Behavior
 ~~~~~~~~
@@ -142,73 +145,20 @@ Add ``data-htmx-plus-offcanvas="<target_id>"`` to the offcanvas root element:
 
 .. code-block:: html
 
-    <!-- Bootstrap Offcanvas -->
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="flyout-end" data-htmx-plus-offcanvas="flyout-end" aria-labelledby="flyout-label" aria-modal="true" role="dialog">
-	</div>
+   <!-- Bootstrap Offcanvas -->
+   <div class="offcanvas offcanvas-end" tabindex="-1" id="flyout-end" data-htmx-plus-offcanvas="flyout-end" aria-labelledby="flyout-label" aria-modal="true" role="dialog">
+   </div>
 
 Create HTMX Triggers
 ~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: html
 
-    <button class="btn btn-secondary" hx-get="/menu/" hx-target="#flyout">
+    <button class="btn btn-secondary" hx-get="/menu/" hx-target="#flyout-end">
         Open Menu
     </button>
 
 Behavior is the same as modals – content triggers show, empty response triggers close.
-
-Complete Example
-================
-
-.. code-block:: html
-   :caption: Test.py
-
-    {% extends "base.html" %}
-    {% load django_htmx_plus %}
-
-    {% block modal %}
-    <div class="modal fade" data-htmx-plus-modal="form-dialog">
-        <div class="modal-dialog">
-            <div id="form-dialog" class="modal-content">
-                <!-- Form content swapped here -->
-            </div>
-        </div>
-    </div>
-    {% endblock %}
-
-    {% block content %}
-    <div class="container mt-4">
-        <button hx-get="{% url 'person-form' %}" hx-target="#form-dialog" class="btn btn-primary">
-            Add Person
-        </button>
-    </div>
-    {% endblock %}
-
-    {% block script %}
-    {% htmx_plus_script %}
-    {% endblock %}
-
-Django View
-~~~~~~~~~~~
-
-.. code-block:: python
-
-    from django.views.generic import TemplateView
-    from django_htmx_plus.mixins import HtmxFormResponseMixin
-    from django_htmx_plus.http import HtmxResponse
-
-    class PersonFormView(HtmxFormResponseMixin, CreateView):
-        model = Person
-        form_class = PersonForm
-        template_name = "person/form.html"
-        valid_triggers = ["personCreated"]
-        success_message = "Person added successfully."
-
-After form submission, the view returns ``HtmxResponse(triggers=["personCreated"])`` which:
-
-1. The modal is automatically closed
-2. The ``personCreated`` event is fired
-3. Any listeners on ``personCreated`` are triggered
 
 CSP Nonce Support
 =================

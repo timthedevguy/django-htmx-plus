@@ -201,6 +201,9 @@ The context variables help build URLs that preserve or modify filters correctly.
 Advanced: Custom Filter Widgets
 ===============================
 
+.. warning::
+   AI generated content, I have not yet tested these samples
+
 Create reusable filter components:
 
 .. code-block:: html
@@ -228,6 +231,9 @@ Use in your filter form:
 
 Advanced: Range Picker
 ======================
+
+.. warning::
+   AI generated content, I have not yet tested these samples
 
 For date ranges, use a JavaScript date picker:
 

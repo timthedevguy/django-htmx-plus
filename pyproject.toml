@@ -7,14 +7,17 @@ authors = [
 ]
 license = {text = "MIT"}
 readme = "README.md"
-requires-python = "^3.11"
+requires-python = ">=3.11,<4"
 dependencies = [
     "django-cotton (>=2.6.2,<3.0.0)",
-    "django-htmx (>=1.27.0,<2.0.0)"
 ]
+
+[tool.poetry]
+exclude = [".venv/", "build/", "dist/", ".readthedocs.yaml"]
 
 [tool.poetry.scripts]
 tests = "run_tests:main"
+docs = "scripts.docs_dev:main"
 
 [tool.black]
 line-length = 120
@@ -37,6 +40,7 @@ pylint = "^4.0.5"
 sphinx = ">=7"
 sphinx-copybutton = "^0.5.2"
 shibuya = "^2026.1.9"
+sphinx-autobuild = "^2025.8.25"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

@@ -30,47 +30,6 @@ The view automatically handles:
 - Pagination
 - Query string preservation for updates
 
-Template
-========
-
-Create a template that uses the context variables:
-
-.. code-block:: html
-
-    <!-- article/list.html -->
-    {% extends "base.html" %}
-    {% load cotton_extras %}
-
-    {% block content %}
-    <div class="container mt-4">
-        <h1>Articles</h1>
-
-        <!-- Filter form (optional) -->
-        <form method="get" class="mb-4">
-            <div class="row">
-                <div class="col-md-6">
-                    <select name="status.eq" class="form-select">
-                        <option value="">All Status</option>
-                        <option value="draft">Draft</option>
-                        <option value="published">Published</option>
-                    </select>
-                </div>
-                <div class="col-md-6">
-                    <input type="text" name="title.ilike" placeholder="Search title..." class="form-control">
-                </div>
-            </div>
-            <button type="submit" class="btn btn-primary mt-2">Filter</button>
-        </form>
-
-        <!-- Table with HTMX updates -->
-        <div id="article-table" hx-trigger="articleCreated,articleUpdated,articleDeleted from:body">
-            <c-tables.htmx_table class="table table-striped table-hover" />
-        </div>
-    </div>
-    {% endblock %}
-
-The ``hx-trigger`` ensures the table refreshes when articles are created, updated, or deleted.
-
 Filtering
 =========
 
@@ -92,6 +51,9 @@ Users can filter by adding query parameters:
 
     # Multiple filters
     /articles/?status.eq=published&views.gte=100&title.ilike=django
+
+.. attention::
+   I have not implemented a cotton component to provide filtering UI elements.  You can build your own filter form that submits with HTMX to make it more user-friendly until I add this feature.
 
 See :doc:`../api/filters` for the complete filter reference.
 
@@ -213,37 +175,6 @@ For complex filtering, override ``get_queryset()``:
             return queryset
 
 The base implementation handles URL-based filters; your custom logic runs after.
-
-Integration with Forms and Modals
-=================================
-
-Combine list view with forms in modals:
-
-.. code-block:: html
-
-    {% extends "base.html" %}
-    {% load django_htmx_plus %}
-    {% load cotton_extras %}
-
-    {% block modal %}
-    <div class="modal fade" data-htmx-plus-modal="article-form">
-        <div class="modal-dialog">
-            <div id="article-form" class="modal-content"></div>
-        </div>
-    </div>
-    {% endblock %}
-
-    {% block content %}
-    <button hx-get="{% url 'article-create' %}" hx-target="#article-form" class="btn btn-primary">
-        New Article
-    </button>
-
-    <div id="article-table" hx-trigger="articleCreated,articleUpdated,articleDeleted from:body">
-        <c-tables.htmx_table class="table table-striped" />
-    </div>
-    {% endblock %}
-
-When articles are created/updated/deleted via the modal forms, the list automatically refreshes.
 
 Best Practices
 ==============
