@@ -43,8 +43,8 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx_copybutton",
 ]
-if os.environ.get("READTHEDOCS") == "True":
-    extensions.append("sphinx_build_compatibility.extension")
+# if os.environ.get("READTHEDOCS") == "True":
+#     extensions.append("sphinx_build_compatibility.extension")
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
