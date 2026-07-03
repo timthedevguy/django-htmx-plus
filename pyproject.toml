@@ -16,11 +16,6 @@ dynamic = ["version"]
 exclude = [".venv/", "build/", "dist/", ".readthedocs.yaml"]
 version = "0.0.0"
 
-[tool.poetry-dynamic-versioning]
-enable = true
-vcs = "git"
-style = "semver"
-
 [tool.poetry.scripts]
 tests = "run_tests:main"
 docs = "scripts.docs_dev:main"
@@ -48,6 +43,9 @@ sphinx-copybutton = "^0.5.2"
 shibuya = "^2026.1.9"
 sphinx-autobuild = "^2025.8.25"
 
+
+[tool.poetry-dynamic-versioning]
+enable = true
 [build-system]
 requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
 build-backend = "poetry_dynamic_versioning.backend"
