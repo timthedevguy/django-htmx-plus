@@ -91,9 +91,8 @@ class HtmxListView(ListView):
         """Check whether a user-supplied ordering field is permitted.
 
         The field name is extracted by stripping a leading ``-`` (descending
-        indicator). Only the *root* segment (the part before the first ``__``)
-        is checked against ``self.fields``, so callers cannot bypass the
-        allowlist via related-model traversal (e.g. ``allowed_field__secret``).
+        indicator). The field is then checked against ``self.fields``, so callers
+        cannot bypass the allowlist via related-model traversal (e.g. ``allowed_field__secret``).
 
         Args:
             order_by (str): The raw ``order_by`` value from the query string,
@@ -103,11 +102,14 @@ class HtmxListView(ListView):
             bool: ``True`` if the field is permitted or no allowlist is active,
                 ``False`` otherwise.
         """
-        if not self.fields or "__all__" in self.fields:
+        if not self.fields:
+            return False
+
+        if self.fields and "__all__" in self.fields:
             return True
+
         field = order_by.lstrip('-')
-        root_field = field.split('__')[0]
-        return root_field in self.fields
+        return field in self.fields
 
     def get_context_data(self, **kwargs):
         """Build and return the template context dictionary.
@@ -155,6 +157,7 @@ class HtmxListView(ListView):
         context["query"] = self.query
         context["filter_query"] = self.filter_query
         context["filters"] = build_filters_template_dict(self.filter)
+        context["object_list"] = list(context["object_list"])
 
         fields = {
             "keys": self.fields,

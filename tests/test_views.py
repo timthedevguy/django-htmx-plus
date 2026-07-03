@@ -106,10 +106,10 @@ class TestHtmxListViewSetup(TestCase):
         view.fields = ("__all__",)
         self.assertTrue(view._is_order_by_allowed("anything"))
 
-    def test_is_order_by_allowed_with_empty_fields(self):
+    def test_is_order_by_denied_with_empty_fields(self):
         view = _PersonListView()
         view.fields = ()
-        self.assertTrue(view._is_order_by_allowed("anything"))
+        self.assertFalse(view._is_order_by_allowed("anything"))
 
     # --- get_context_data ---
 
