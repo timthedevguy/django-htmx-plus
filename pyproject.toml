@@ -1,6 +1,5 @@
 [project]
 name = "django-htmx-plus"
-version = "0.0.0"
 description = "django-htmx plus some extras"
 authors = [
     {name = "Tim Davis",email = "binary.god@gmail.com"}
@@ -11,9 +10,11 @@ requires-python = ">=3.11,<4"
 dependencies = [
     "django-cotton (>=2.6.2,<3.0.0)",
 ]
+dynamic = ["version"]
 
 [tool.poetry]
 exclude = [".venv/", "build/", "dist/", ".readthedocs.yaml"]
+version = "0.0.0"
 
 [tool.poetry-dynamic-versioning]
 enable = true
@@ -48,5 +49,5 @@ shibuya = "^2026.1.9"
 sphinx-autobuild = "^2025.8.25"
 
 [build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
+build-backend = "poetry_dynamic_versioning.backend"
