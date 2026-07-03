@@ -67,7 +67,7 @@ jobs:
       - name: Install Poetry
         run: |
           pipx install poetry
-          pipx inject poetry "poetry-dynamic-versioning[plugin]"
+          poetry self add "poetry-dynamic-versioning[plugin]"
 
       - name: Build package
         run: poetry build
