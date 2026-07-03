@@ -1,6 +1,6 @@
 [project]
 name = "django-htmx-plus"
-version = "0.2.0"
+version = "0.0.0"
 description = "django-htmx plus some extras"
 authors = [
     {name = "Tim Davis",email = "binary.god@gmail.com"}
@@ -14,6 +14,11 @@ dependencies = [
 
 [tool.poetry]
 exclude = [".venv/", "build/", "dist/", ".readthedocs.yaml"]
+
+[tool.poetry-dynamic-versioning]
+enable = true
+vcs = "git"
+style = "semver"
 
 [tool.poetry.scripts]
 tests = "run_tests:main"
