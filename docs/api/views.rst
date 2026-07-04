@@ -55,6 +55,34 @@ Attributes
 
     Default: ``25``
 
+.. attribute:: elided_each_side
+    :type: int
+
+    Number of page numbers shown on each side of the current page in the elided
+    page range (passed to ``Paginator.get_elided_page_range``). Only read when
+    ``paginate_by`` is set.
+
+    Default: ``1``
+
+.. attribute:: elided_ends
+    :type: int
+
+    Number of page numbers shown at each end of the elided page range (passed to
+    ``Paginator.get_elided_page_range``). Only read when ``paginate_by`` is set.
+
+    Default: ``1``
+
+.. attribute:: enable_history
+    :type: bool
+
+    Whether the ``header_cell``/``pager`` Cotton components push sort, filter, and
+    page changes onto the browser history via ``hx-push-url``. When enabled, add
+    ``hx-history-elt`` to the element wrapping ``<c-tables.htmx_table />`` so
+    Back/Forward navigation restores the table correctly — see
+    :doc:`../guide/list_views`.
+
+    Default: ``False``
+
 Context Variables
 ~~~~~~~~~~~~~~~~~
 
@@ -105,6 +133,12 @@ The view provides the following context variables for templates:
 
     Dict with ``keys`` (list of field names, always including ``"pk"``) and ``labels``
     (list of display names).
+
+.. attribute:: enable_history
+    :type: bool
+
+    Whether sort/filter/page links should push browser history entries (from the
+    view's ``enable_history`` attribute).
 
 URL Query Parameters
 ~~~~~~~~~~~~~~~~~~~~

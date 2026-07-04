@@ -21,6 +21,9 @@ class HtmxListView(ListView):
             ``"pk"`` is always added automatically (see :meth:`get_fields`) so that rows
             remain uniquely identifiable even when not explicitly listed; templates hide
             the ``pk`` column by default unless ``show_pk`` is truthy in the context.
+        enable_history (bool): Whether the ``header_cell``/``pager`` components should push
+            sort/filter/page changes onto the browser history (``hx-push-url``). Defaults to
+            ``False``; set to ``True`` to enable browser history integration for this view.
 
     To post-process rows before they reach the template (e.g. annotate or reshape
     values), override :meth:`get_transform_data` rather than :meth:`get_context_data`.
@@ -29,6 +32,7 @@ class HtmxListView(ListView):
     target_id = ""
     fields: Tuple[str, ...] = ()
     labels: {}
+    enable_history: bool = False
 
     def __init__(self):
         """Initialise instance-level defaults for filter, query, and ordering state.
@@ -169,6 +173,8 @@ class HtmxListView(ListView):
             - ``filters`` (dict): Template-ready representation of active filters.
             - ``fields`` (dict): ``keys`` (from :meth:`get_fields`, always including
               ``"pk"``) and ``labels``.
+            - ``enable_history`` (bool): Whether sort/filter/page links should push
+              browser history entries (``hx-push-url``).
         """
         context = super().get_context_data(**kwargs)
         context["object_list"] = self.get_transform_data(context['object_list'])
@@ -196,6 +202,7 @@ class HtmxListView(ListView):
         context["query"] = self.query
         context["filter_query"] = self.filter_query
         context["filters"] = build_filters_template_dict(self.filter)
+        context["enable_history"] = self.enable_history
 
         fields = {
             "keys": fields,

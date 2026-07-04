@@ -119,6 +119,68 @@ The view provides:
 - ``paginator`` – Paginator instance
 - ``page_range`` – Elided page numbers (shows first, last, and pages around current)
 
+Browser History (Back/Forward Navigation)
+==========================================
+
+Sorting, pagination, and filtering can update the URL query string and push a
+new browser history entry for each change (via ``hx-push-url`` on the
+``header_cell``/``pager`` components), so the address bar reflects the
+current table state and can be bookmarked or shared.
+
+This is opt-in — set ``enable_history = True`` on the view to turn it on:
+
+.. code-block:: python
+
+    class ArticleListView(HtmxListView):
+        model = Article
+        template_name = "article/list.html"
+        enable_history = True
+
+By default (``enable_history = False``), sort/page/filter links don't touch
+``hx-push-url`` or browser history at all — the table updates in place with
+no address bar changes. This is the safer default for tables embedded in
+modals or alongside other independently-updating widgets on a page.
+
+For the Back/Forward buttons to actually restore the table once history is
+enabled, add ``hx-history-elt`` to the element wrapping
+``<c-tables.htmx_table />`` — the same element that carries your
+``target_id``:
+
+.. code-block:: html
+
+    <div id="article-table" hx-history-elt>
+        <c-tables.htmx_table class="table table-striped" />
+    </div>
+
+Without this, htmx falls back to snapshotting/restoring the entire ``<body>``
+on history navigation, which doesn't line up with the smaller region your
+sort/page/filter clicks actually swap — Back/Forward can then appear to do
+nothing. ``hx-history-elt`` needs to be present on every page rendered by this
+view for restoration to work reliably. If a page has multiple independent
+tables, only enable history (and designate ``hx-history-elt``) on one of
+them — htmx tracks a single history snapshot per page.
+
+If this same wrapping element also refreshes on a custom trigger (e.g.
+``hx-trigger="articleCreated from:body"`` after a modal form save), its
+``hx-get`` needs the current URL's query string appended —
+``?{{ request.GET.urlencode }}`` — so the refresh re-reads the browser's
+current sort/filter/page state instead of resetting to the view's defaults:
+
+.. code-block:: html
+
+    <div id="article-table"
+         hx-trigger="articleCreated from:body"
+         hx-get="{{ path }}?{{ request.GET.urlencode }}"
+         hx-history-elt>
+        <c-tables.htmx_table class="table table-striped" />
+    </div>
+
+This is only necessary when ``enable_history`` is ``True`` — that's the only
+case where the browser's address bar (and therefore ``request.GET`` on the
+next render) can hold table state that differs from what the page was
+originally rendered with. With history disabled, the trigger's plain
+``hx-get`` (no appended query string) is fine.
+
 Using Cotton Components
 =======================
 

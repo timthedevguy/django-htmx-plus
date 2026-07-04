@@ -8,7 +8,7 @@
 		<ul class="pagination" hx-target="{{ target_id }}">
 			<li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
 				<button type="button" class="page-link"
-						{% if page_obj.has_previous %}hx-get="{{ request.path }}?page={{ page_obj.previous_page_number }}&{{ query }}"{% endif %}
+						{% if page_obj.has_previous %}hx-get="{{ request.path }}?page={{ page_obj.previous_page_number }}&{{ query }}"{% if enable_history %} hx-push-url="?page={{ page_obj.previous_page_number }}&{{ query }}"{% endif %}{% endif %}
 						tabindex="-1" aria-disabled="true">
 					<c-icons.chevron_left/>
 				</button>
@@ -19,13 +19,13 @@
 						<span class="page-link h-100">{{ page }}</span>
 					{% else %}
 						<button type="button" class="h-100 page-link {% if page_obj.number == page %}active{% endif %}"
-								hx-get="{{ request.path }}?page={{ page }}&{{ query }}">{{ page }}</button>
+								hx-get="{{ request.path }}?page={{ page }}&{{ query }}"{% if enable_history %} hx-push-url="?page={{ page }}&{{ query }}"{% endif %}>{{ page }}</button>
 					{% endif %}
 				</li>
 			{% endfor %}
 			<li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
 				<button type="button" class="page-link"
-						{% if page_obj.has_next %}hx-get="{{ request.path }}?page={{ page_obj.next_page_number }}&{{ query }}"{% endif %}
+						{% if page_obj.has_next %}hx-get="{{ request.path }}?page={{ page_obj.next_page_number }}&{{ query }}"{% if enable_history %} hx-push-url="?page={{ page_obj.next_page_number }}&{{ query }}"{% endif %}{% endif %}
 						tabindex="-1" aria-disabled="true">
 					<c-icons.chevron_right/>
 				</button>

@@ -26,7 +26,7 @@ The simplest way to build a table is using the complete component:
     {% load cotton_extras %}
 
     {% block content %}
-    <div id="article-table" hx-trigger="articleCreated from:body">
+    <div id="article-table" hx-trigger="articleCreated from:body" hx-history-elt>
         <c-tables.htmx_table class="table table-striped table-hover" />
     </div>
     {% endblock %}
@@ -38,6 +38,13 @@ This single component renders:
 - Pagination controls
 
 All automatic from your ``HtmxListView`` context.
+
+``hx-history-elt`` marks this div as the region htmx should snapshot and
+restore on Back/Forward navigation, matching what sorting/pagination/filtering
+swap when history is enabled. Browser history integration is opt-in — it only
+takes effect if the view also sets ``enable_history = True`` (see
+:doc:`list_views`); otherwise ``hx-history-elt`` has nothing to do since no
+``hx-push-url`` is ever emitted.
 
 Custom Table Structure
 ======================
@@ -208,6 +215,11 @@ Template with both tables:
     {% endblock %}
 
 Each table updates independently based on filters and sorting.
+
+.. note::
+   htmx only tracks a single history snapshot per page, so don't add
+   ``hx-history-elt`` to both tables here — Back/Forward navigation isn't a
+   good fit when two independently-paginated/sorted tables share one URL.
 
 Integration with Modals
 =======================
