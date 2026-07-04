@@ -3,7 +3,9 @@
 <table class="{{class}}">
 	<thead>
 		{% for field in fields.keys %}
-			<c-tables.header_cell name="{{ field }}">{% if field in fields.labels %}{{ fields.labels|get_key_value:field }}{% else %}{{field|capfirst}}{% endif %}</c-tables.header_cell>
+			{% if field != "pk" or show_pk is True %}
+				<c-tables.header_cell name="{{ field }}">{% if field in fields.labels %}{{ fields.labels|get_key_value:field }}{% else %}{{field|capfirst}}{% endif %}</c-tables.header_cell>
+			{% endif %}
 		{% endfor %}
 	</thead>
 	<tbody>

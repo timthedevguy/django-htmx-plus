@@ -181,6 +181,8 @@ Filters are expressed as `field_name.filter_type=value` query parameters:
 
 Only fields listed in `fields` are accepted. Setting `fields = ("__all__",)` lifts the restriction.
 
+`"pk"` is always added to `fields` automatically if it isn't already present (unless `fields = ("__all__",)`), so rows remain uniquely identifiable even if you don't list it explicitly. The `<c-tables.htmx_table />` component hides the `pk` column by default — pass `show_pk=True` in the context to render it.  You can force `"pk"` to show in the list at the desired position by adding it to the fields list manually.
+
 #### Sorting
 
 Add `order_by=field_name` (or `order_by=-field_name` for descending) to the query string. Only fields in `fields` are permitted.
@@ -197,7 +199,23 @@ Add `order_by=field_name` (or `order_by=-field_name` for descending) to the quer
 | `query` | Full query string including `order_by`. |
 | `filter_query` | Query string containing only filter parameters. |
 | `filters` | Template-ready dict mapping plain field names to their filter values. |
-| `fields` | Dict with `keys` (field names) and `labels` (display names). |
+| `fields` | Dict with `keys` (field names, always including `pk`) and `labels` (display names). |
+
+#### Transforming rows
+
+Override `get_transform_data` to post-process each page's rows before they reach the template, without touching `get_queryset` or `get_context_data`:
+
+```python
+class ArticleListView(HtmxListView):
+    model = Article
+    fields = ("title", "status", "created_at")
+
+    def get_transform_data(self, objects):
+        rows = super().get_transform_data(objects)
+        for row in rows:
+            row["status"] = row["status"].title()
+        return rows
+```
 
 ---
 

@@ -30,6 +30,31 @@ The view automatically handles:
 - Pagination
 - Query string preservation for updates
 
+.. note::
+   ``"pk"`` is always added to ``fields`` automatically, even if you don't list it, so rows
+   stay uniquely identifiable. The ``<c-tables.htmx_table />`` component hides the ``pk``
+   column by default — pass ``show_pk=True`` in the context if you want it rendered.
+
+Automatic PK Injection
+======================
+Since ``"pk"`` is always added to ``fields`` at the beginning of the fields list there may be a time that you would like to show the column in a certain position.  Simply add the ``"pk"`` to your field list in the HtmxListView and it will be shown regardless of the ``show_pk=True`` setting and will be shown in the position you specified.
+
+.. code-block:: python
+
+    from django_htmx_plus.views import HtmxListView
+    from myapp.models import Article
+
+    class ArticleListView(HtmxListView):
+        model = Article
+        template_name = "article/list.html"
+        paginate_by = 20
+        target_id = "#article-table"
+
+        # Restrict to these fields only
+        fields = ("id", "title", "status", "pk", "created_at")
+
+In the sample code above the PK column will be rendered second to last.
+
 Filtering
 =========
 
@@ -175,6 +200,27 @@ For complex filtering, override ``get_queryset()``:
             return queryset
 
 The base implementation handles URL-based filters; your custom logic runs after.
+
+Advanced: Transforming Rows
+============================
+
+To post-process rows (e.g. reformat a value) without overriding ``get_queryset()`` or
+``get_context_data()``, override ``get_transform_data()``:
+
+.. code-block:: python
+
+    class ArticleListView(HtmxListView):
+        model = Article
+        fields = ("title", "status", "created_at")
+
+        def get_transform_data(self, objects):
+            rows = super().get_transform_data(objects)
+            for row in rows:
+                row["status"] = row["status"].title()
+            return rows
+
+It receives the current page's queryset (or values queryset, if ``fields`` is restricted)
+and must return the list of rows for the template.
 
 Best Practices
 ==============

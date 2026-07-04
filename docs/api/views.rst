@@ -27,6 +27,11 @@ Attributes
 
     The fields that are allowed for filtering and sorting. Set to ``("__all__",)`` to allow all fields.
 
+    ``"pk"`` is always added automatically if it isn't already present (unless ``fields`` is
+    ``"__all__"``), so rows remain uniquely identifiable even if you don't list it explicitly.
+    The ``<c-tables.htmx_table />`` component hides the ``pk`` column by default — pass
+    ``show_pk=True`` in the context to render it.
+
     Default: ``("__all__",)``
 
 .. attribute:: labels
@@ -98,7 +103,8 @@ The view provides the following context variables for templates:
 .. attribute:: fields
     :type: Dict[str, List[str]]
 
-    Dict with ``keys`` (list of field names) and ``labels`` (list of display names).
+    Dict with ``keys`` (list of field names, always including ``"pk"``) and ``labels``
+    (list of display names).
 
 URL Query Parameters
 ~~~~~~~~~~~~~~~~~~~~
@@ -188,3 +194,24 @@ The ``HtmxListView`` automatically handles:
 - ORM filter generation
 - Sorting
 - Pagination with elided page ranges
+
+Transforming Rows
+~~~~~~~~~~~~~~~~~~
+
+Override :meth:`get_transform_data` to post-process each page's rows before they reach the
+template, without re-implementing filtering or pagination:
+
+.. code-block:: python
+
+    class ArticleListView(HtmxListView):
+        model = Article
+        fields = ("title", "status", "created_at")
+
+        def get_transform_data(self, objects):
+            rows = super().get_transform_data(objects)
+            for row in rows:
+                row["status"] = row["status"].title()
+            return rows
+
+``get_transform_data`` receives the current page's queryset (or values queryset) and must
+return the list of rows to render.
