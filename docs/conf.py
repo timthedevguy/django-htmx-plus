@@ -8,7 +8,7 @@ from __future__ import annotations
 import os
 import sys
 from pathlib import Path
-
+import importlib.metadata
 import tomllib
 
 # -- Path setup --------------------------------------------------------------
@@ -29,7 +29,12 @@ author = "Tim Davis"
 # for |version| and |release|, also used in various other places throughout
 # the built documents.
 
-version = pyproject_toml_data["project"]["version"]
+# version = pyproject_toml_data["project"]["version"]
+# release = version
+try:
+    version = importlib.metadata.version(project)
+except importlib.metadata.PackageNotFoundError:
+    version = "0.0.0"
 release = version
 
 # -- General configuration ---------------------------------------------------
