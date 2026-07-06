@@ -1,18 +1,41 @@
 {% load cotton_extras %}
 <div class="htmx-table-wrap">
+{% if paginator %}
+	<div class="d-flex">
+		<div class="flex-grow-1">
+			Show
+			<select id="django-htmx-plus-paginate-select" name="paginate_by" hx-target="{{ hx_target_id }}" hx-get="{{ request.path }}?page={{ page_obj.number }}&{{ query }}"{% if enable_history %} data-htmx-plus-push-url="?page={{ page_obj.number }}&{{ query }}&paginate_by="{% endif %}>
+				<option value="10" {% if paginator.per_page == 10 %}selected{% endif %}>10</option>
+				<option value="25" {% if paginator.per_page == 25 %}selected{% endif %}>25</option>
+				<option value="50" {% if paginator.per_page == 50 %}selected{% endif %}>50</option>
+				<option value="100" {% if paginator.per_page == 100 %}selected{% endif %}>100</option>
+			</select>
+			entries
+		</div>
+		<div>
+
+		</div>
+	</div>
+{% endif %}
 <table class="{{class}}">
 	<thead>
-		{% for field in fields.keys %}
-			{% if field != "pk" or show_pk is True %}
-				<c-tables.header_cell name="{{ field }}">{% if field in fields.labels %}{{ fields.labels|get_key_value:field }}{% else %}{{field|capfirst}}{% endif %}</c-tables.header_cell>
+		{% for field in fields %}
+			{% if field.visible is True %}
+				{% if field.name != "pk" or show_pk is True %}
+					<c-tables.header_cell name="{{ field.name }}">{{ field.label }}</c-tables.header_cell>
+				{% endif %}
 			{% endif %}
 		{% endfor %}
 	</thead>
 	<tbody>
 	{% for item in object_list %}
 		<tr>
-			{% for field in fields.keys %}
-				<td>{{ item|get_key_value:field }}</td>
+			{% for field in fields %}
+				{% if field.visible is True %}
+					{% if field.name != "pk" or show_pk is True %}
+						<td>{{ item|get_key_value:field.name }}</td>
+					{% endif %}
+				{% endif %}
 			{% endfor %}
 		</tr>
 	{% endfor %}

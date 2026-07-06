@@ -58,8 +58,8 @@ Create interactive list views with URL-based filtering, sorting, and pagination:
     class ArticleListView(HtmxListView):
         model = Article
         template_name = "articles/list.html"
-        paginate_by = 20
-        target_id = "#article-table"
+        paginate_by = 10
+        hx_target_id = "#article-table"
 
         # Restrict filtering and sorting to these fields
         fields = ("id", "title", "status", "created_at")

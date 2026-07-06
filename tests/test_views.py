@@ -19,7 +19,7 @@ class _PersonListView(HtmxListView):
     model = PersonTest
     template_name = "dummy.html"
     fields = ("name", "age")
-    target_id = "person-list"
+    hx_target_id = "person-list"
     labels = {"name": "Name", "age": "Age"}
     paginate_by = 10
 
@@ -42,9 +42,9 @@ class TestHtmxListViewSetup(TestCase):
 
     # --- Default ordering ---
 
-    def test_default_order_by_is_pk(self):
+    def test_default_order_by_is_none(self):
         view = self._get_view()
-        self.assertEqual(view.order_by, "pk")
+        self.assertIsNone(view.order_by)
 
     # --- Custom ordering ---
 
@@ -56,16 +56,16 @@ class TestHtmxListViewSetup(TestCase):
         view = self._get_view({"order_by": "-age"})
         self.assertEqual(view.order_by, "-age")
 
-    def test_order_by_disallowed_field_falls_back_to_pk(self):
+    def test_order_by_disallowed_field_is_ignored(self):
         view = self._get_view({"order_by": "secret"})
-        self.assertEqual(view.order_by, "pk")
+        self.assertIsNone(view.order_by)
 
     def test_order_by_traversal_attempt_blocked(self):
         view = self._get_view({"order_by": "name__secret"})
         # root field "name" is allowed so traversal is rejected based on root only
         # This verifies that only the root is checked
         view2 = self._get_view({"order_by": "secret__name"})
-        self.assertEqual(view2.order_by, "pk")
+        self.assertIsNone(view2.order_by)
 
     # --- Filter parsing ---
 
@@ -83,9 +83,13 @@ class TestHtmxListViewSetup(TestCase):
         view = self._get_view({"name.eq": "Alice"})
         self.assertIn("name.eq=Alice", view.filter_query)
 
-    def test_query_contains_order_by(self):
+    def test_query_contains_order_by_when_requested(self):
+        view = self._get_view({"name.eq": "Alice", "order_by": "name"})
+        self.assertIn("order_by=name", view.query)
+
+    def test_query_omits_order_by_when_not_requested(self):
         view = self._get_view({"name.eq": "Alice"})
-        self.assertIn("order_by=", view.query)
+        self.assertNotIn("order_by=", view.query)
 
     # --- _is_order_by_allowed ---
 
@@ -101,11 +105,6 @@ class TestHtmxListViewSetup(TestCase):
         view = _PersonListView()
         self.assertFalse(view._is_order_by_allowed("password"))
 
-    def test_is_order_by_allowed_with_all_fields(self):
-        view = _PersonListView()
-        view.fields = ("__all__",)
-        self.assertTrue(view._is_order_by_allowed("anything"))
-
     def test_is_order_by_denied_with_empty_fields(self):
         view = _PersonListView()
         view.fields = ()
@@ -120,17 +119,17 @@ class TestHtmxListViewSetup(TestCase):
         view.kwargs = {}
         view.object_list = view.get_queryset()
         context = view.get_context_data()
-        for key in ("query_params", "order_by", "path", "target_id", "query", "filter_query", "filters", "fields"):
+        for key in ("query_params", "order_by", "path", "hx_target_id", "query", "filter_query", "filters", "fields"):
             self.assertIn(key, context)
 
-    def test_context_target_id(self):
+    def test_context_hx_target_id(self):
         request = self.factory.get("/")
         view = _PersonListView()
         view.setup(request)
         view.kwargs = {}
         view.object_list = view.get_queryset()
         context = view.get_context_data()
-        self.assertEqual(context["target_id"], "person-list")
+        self.assertEqual(context["hx_target_id"], "person-list")
 
     def test_context_page_range_present_when_paginated(self):
         request = self.factory.get("/")
@@ -159,6 +158,55 @@ class TestHtmxListViewSetup(TestCase):
         view.object_list = view.get_queryset()
         context = view.get_context_data()
         self.assertEqual(context["filters"], {"name": "Alice"})
+
+    # --- fields / hidden_fields ---
+
+    def test_context_fields_default_all_visible(self):
+        request = self.factory.get("/")
+        view = _PersonListView()
+        view.setup(request)
+        view.kwargs = {}
+        view.object_list = view.get_queryset()
+        context = view.get_context_data()
+        self.assertTrue(all(f["visible"] for f in context["fields"]))
+        self.assertEqual({f["name"] for f in context["fields"]}, {"pk", "name", "age"})
+
+    def test_context_fields_uses_custom_label(self):
+        request = self.factory.get("/")
+        view = _PersonListView()
+        view.setup(request)
+        view.kwargs = {}
+        view.object_list = view.get_queryset()
+        context = view.get_context_data()
+        name_field = next(f for f in context["fields"] if f["name"] == "name")
+        self.assertEqual(name_field["label"], "Name")
+
+    def test_context_fields_falls_back_to_capfirst_label(self):
+        request = self.factory.get("/")
+        view = _PersonListView()
+        view.setup(request)
+        view.kwargs = {}
+        view.object_list = view.get_queryset()
+        context = view.get_context_data()
+        pk_field = next(f for f in context["fields"] if f["name"] == "pk")
+        self.assertEqual(pk_field["label"], "Pk")
+
+    def test_hidden_fields_marked_not_visible(self):
+        request = self.factory.get("/")
+        view = _PersonListView()
+        view.hidden_fields = ("age",)
+        view.setup(request)
+        view.kwargs = {}
+        view.object_list = view.get_queryset()
+        context = view.get_context_data()
+        age_field = next(f for f in context["fields"] if f["name"] == "age")
+        other_fields = [f for f in context["fields"] if f["name"] != "age"]
+        self.assertFalse(age_field["visible"])
+        self.assertTrue(all(f["visible"] for f in other_fields))
+
+    def test_get_hidden_fields_default_is_empty(self):
+        view = _PersonListView()
+        self.assertEqual(view.get_hidden_fields(), ())
 
 
 

@@ -37,9 +37,15 @@ Uses the following context variables from ``HtmxListView``:
 - ``order_by`` – Current sort field
 - ``path`` – Request path
 - ``filter_query`` – Query string with filters only
-- ``target_id`` – HTMX target element ID
+- ``hx_target_id`` – HTMX target element ID
 - ``page_obj`` – Current page object
 - ``paginator`` – Paginator instance
+
+When ``paginator`` is present (i.e. the view has ``paginate_by`` set), the
+component also renders a "Show N entries" ``<select>`` (options: ``10``, ``25``,
+``50``, ``100``) above the table. Changing it issues an ``hx-get`` with a
+``paginate_by`` query parameter, which ``HtmxListView`` reads back out of
+``request.GET`` to resize the page — see :doc:`../guide/list_views`.
 
 Header Components
 =================

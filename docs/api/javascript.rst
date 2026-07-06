@@ -160,6 +160,23 @@ Create HTMX Triggers
 
 Behavior is the same as modals – content triggers show, empty response triggers close.
 
+Page-Size Selector History
+===========================
+
+``<c-tables.htmx_table />``'s "Show N entries" selector (see :doc:`../guide/list_views`)
+carries a ``data-htmx-plus-push-url`` attribute instead of a static ``hx-push-url``,
+since the chosen page size isn't known until the user picks it client-side. On a
+successful request from an element with this attribute, the script appends the
+element's current ``value`` and calls ``history.pushState`` directly:
+
+.. code-block:: html
+
+    <select name="paginate_by" data-htmx-plus-push-url="?page=1&amp;paginate_by=">
+
+This only fires for elements you mark with ``data-htmx-plus-push-url`` — it has no
+effect on ``header_cell``/``pager``, which push a complete URL themselves via a
+normal ``hx-push-url`` attribute.
+
 CSP Nonce Support
 =================
 

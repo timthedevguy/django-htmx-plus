@@ -150,8 +150,8 @@ from myapp.models import Article
 class ArticleListView(HtmxListView):
     model = Article
     template_name = "articles/list.html"
-    paginate_by = 20
-    target_id = "#article-table"
+    paginate_by = 10
+    hx_target_id = "#article-table"
 
     # Restrict filtering and sorting to these fields only
     fields = ("id", "title", "status", "created_at")
@@ -179,13 +179,17 @@ Filters are expressed as `field_name.filter_type=value` query parameters:
 | `rng` | `range` | `created_at.rng=['2024-01-01','2024-12-31']` |
 | `sch` | `search` | `body.sch=htmx` |
 
-Only fields listed in `fields` are accepted. Setting `fields = ("__all__",)` lifts the restriction.
+Only fields listed in `fields` are accepted — there is no wildcard/bypass value.
 
-`"pk"` is always added to `fields` automatically if it isn't already present (unless `fields = ("__all__",)`), so rows remain uniquely identifiable even if you don't list it explicitly. The `<c-tables.htmx_table />` component hides the `pk` column by default — pass `show_pk=True` in the context to render it.  You can force `"pk"` to show in the list at the desired position by adding it to the fields list manually.
+`"pk"` is always added to `fields` automatically if it isn't already present, so rows remain uniquely identifiable even if you don't list it explicitly. The `<c-tables.htmx_table />` component hides the `pk` column by default — pass `show_pk=True` in the context to render it.  You can force `"pk"` to show in the list at the desired position by adding it to the fields list manually.
 
 #### Sorting
 
 Add `order_by=field_name` (or `order_by=-field_name` for descending) to the query string. Only fields in `fields` are permitted.
+
+#### Changing the page size
+
+Add `paginate_by=N` to the query string to override the view's default page size for that request — this is also what the `<c-tables.htmx_table />` "Show N entries" selector submits when `paginate_by` is set on the view. The value is applied via a plain `int()` conversion with no clamping, so views exposed to untrusted users should validate/clamp it themselves (e.g. in an overridden `get_context_data`/`setup`).
 
 #### Context variables
 
@@ -195,7 +199,7 @@ Add `order_by=field_name` (or `order_by=-field_name` for descending) to the quer
 | `page_range` | Elided page range for pagination controls. |
 | `order_by` | The currently active ordering field. |
 | `path` | The current request path. |
-| `target_id` | The HTMX target element ID. |
+| `hx_target_id` | The HTMX target element ID. |
 | `query` | Full query string including `order_by`. |
 | `filter_query` | Query string containing only filter parameters. |
 | `filters` | Template-ready dict mapping plain field names to their filter values. |
@@ -233,7 +237,9 @@ Renders a full table with auto-generated sortable headers, rows, and an optional
 <c-tables.htmx_table class="table table-striped" />
 ```
 
-The component uses the `fields`, `objects`, `order_by`, `path`, `filter_query`, `target_id`, `page_obj`, and `paginator` context variables provided automatically by `HtmxListView`.
+The component uses the `fields`, `objects`, `order_by`, `path`, `filter_query`, `hx_target_id`, `page_obj`, and `paginator` context variables provided automatically by `HtmxListView`.
+
+When `paginator` is present (i.e. `paginate_by` is set on the view), the component also renders a "Show N entries" `<select>` (10/25/50/100) above the table that submits a `paginate_by` query parameter via `hx-get`.
 
 #### `<c-tables.header_cell name="field_name" />`
 

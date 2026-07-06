@@ -5,10 +5,10 @@
 			<strong>{{ page_obj.paginator.count }} entries</strong></p>
 	</div>
 	<div class="justify-content-end">
-		<ul class="pagination" hx-target="{{ target_id }}">
+		<ul class="pagination" hx-target="{{ hx_target_id }}">
 			<li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
 				<button type="button" class="page-link"
-						{% if page_obj.has_previous %}hx-get="{{ request.path }}?page={{ page_obj.previous_page_number }}&{{ query }}"{% if enable_history %} hx-push-url="?page={{ page_obj.previous_page_number }}&{{ query }}"{% endif %}{% endif %}
+						{% if page_obj.has_previous %}hx-get="{{ request.path }}?page={{ page_obj.previous_page_number }}&{{ query }}{% if paginator.per_page != default_paginate_by %}&paginate_by={{ paginator.per_page }}{% endif %}"{% if enable_history %} hx-push-url="?page={{ page_obj.previous_page_number }}{{ query }}{% if paginator.per_page != default_paginate_by %}&paginate_by={{ paginator.per_page }}{% endif %}"{% endif %}{% endif %}
 						tabindex="-1" aria-disabled="true">
 					<c-icons.chevron_left/>
 				</button>
@@ -19,13 +19,13 @@
 						<span class="page-link h-100">{{ page }}</span>
 					{% else %}
 						<button type="button" class="h-100 page-link {% if page_obj.number == page %}active{% endif %}"
-								hx-get="{{ request.path }}?page={{ page }}&{{ query }}"{% if enable_history %} hx-push-url="?page={{ page }}&{{ query }}"{% endif %}>{{ page }}</button>
+								hx-get="{{ request.path }}?page={{ page }}&{{ query }}{% if paginator.per_page != default_paginate_by %}&paginate_by={{ paginator.per_page }}{% endif %}"{% if enable_history %} hx-push-url="?page={{ page }}{{ query }}{% if paginator.per_page != default_paginate_by %}&paginate_by={{ paginator.per_page }}{% endif %}"{% endif %}>{{ page }}</button>
 					{% endif %}
 				</li>
 			{% endfor %}
 			<li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
 				<button type="button" class="page-link"
-						{% if page_obj.has_next %}hx-get="{{ request.path }}?page={{ page_obj.next_page_number }}&{{ query }}"{% if enable_history %} hx-push-url="?page={{ page_obj.next_page_number }}&{{ query }}"{% endif %}{% endif %}
+						{% if page_obj.has_next %}hx-get="{{ request.path }}?page={{ page_obj.next_page_number }}&{{ query }}{% if paginator.per_page != default_paginate_by %}&paginate_by={{ paginator.per_page }}{% endif %}"{% if enable_history %} hx-push-url="?page={{ page_obj.next_page_number }}{{ query }}{% if paginator.per_page != default_paginate_by %}&paginate_by={{ paginator.per_page }}{% endif %}"{% endif %}{% endif %}
 						tabindex="-1" aria-disabled="true">
 					<c-icons.chevron_right/>
 				</button>

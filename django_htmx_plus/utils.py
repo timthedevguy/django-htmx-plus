@@ -4,7 +4,7 @@ from typing import List, Dict, Any, Tuple
 from django_htmx_plus.types import Filter
 
 
-def build_filter_dict(query_params: Dict[str, Any], allowed_fields: Tuple[str, ...] | None) -> dict:
+def build_orm_filter_dict(query_params: Dict[str, Any], allowed_fields: Tuple[str, ...] | None) -> dict:
     """Build a filter dictionary from query parameters, restricted to allowed fields.
 
     Parses query parameters of the form ``field_name.filter_type=value`` and
@@ -17,30 +17,33 @@ def build_filter_dict(query_params: Dict[str, Any], allowed_fields: Tuple[str, .
     from bypassing the allowlist via related-model lookups (e.g.
     ``related__secret.eq=value``).
 
+    There is no wildcard/bypass value: a field must be listed in ``allowed_fields``
+    to be filterable. Passing an empty tuple or ``None`` allows nothing.
+
     Args:
         query_params (dict): A dictionary of raw query parameters, typically
             ``request.GET``.
         allowed_fields (Tuple[str, ...] | None): A tuple of permitted field names.
-            Pass ``("__all__",)`` or an empty tuple/``None`` to allow all fields.
+            An empty tuple or ``None`` denies all fields.
 
     Returns:
         dict: A dictionary suitable for passing directly to ``QuerySet.filter()``.
     """
     filter_dict = {}
-    unrestricted = not allowed_fields or "__all__" in allowed_fields
+    allowed_fields = allowed_fields or ()
     for key, value in query_params.items():
         if "." in key:
             field_name, filter_type = key.split(".", 1)
             # Block traversal: field_name must be a plain field, not a __ path
             if "__" in field_name:
                 continue
-            if unrestricted or field_name in allowed_fields:
+            if field_name in allowed_fields:
                 if filter_type.upper() in Filter.__members__:
                     filter_value = Filter.__members__[filter_type.upper()].value
                     if isinstance(value, str):
                         try:
                             filter_dict[f"{field_name}__{filter_value}"] = ast.literal_eval(value)
-                        except ValueError:
+                        except (ValueError, SyntaxError):
                             filter_dict[f"{field_name}__{filter_value}"] = value
                     else:
                         filter_dict[f"{field_name}__{filter_value}"] = value
@@ -49,7 +52,7 @@ def build_filter_dict(query_params: Dict[str, Any], allowed_fields: Tuple[str, .
     return filter_dict
 
 
-def build_query_str(query_params: dict) -> str:
+def build_filter_query_str(query_params: dict) -> str:
     """Build a URL query string from filter-style query parameters.
 
     Iterates over ``query_params`` and includes only entries whose key contains
@@ -71,7 +74,8 @@ def build_query_str(query_params: dict) -> str:
             items.append(f"{key}={value}")
     return "&".join(items)
 
-def build_filters_template_dict(filter: dict) -> dict:
+
+def build_filters_context(filter: dict) -> dict:
     """Convert an ORM filter dict into a template-friendly mapping.
 
     Strips the Django ORM lookup suffix (everything from the first ``__``
@@ -80,7 +84,7 @@ def build_filters_template_dict(filter: dict) -> dict:
 
     Args:
         filter (dict): A dictionary of ORM filter expressions as returned by
-            :func:`build_filter_dict`.
+            :func:`build_orm_filter_dict`.
 
     Returns:
         dict: A dictionary mapping plain field names to their filter values.
@@ -89,6 +93,7 @@ def build_filters_template_dict(filter: dict) -> dict:
     for key, value in filter.items():
         results[key.split("__")[0]] = value
     return results
+
 
 def split_and_strip(content: str) -> List[str]:
     """Split and normalise a multi-line string into a list of non-empty lines.

@@ -15,7 +15,7 @@ HtmxListView
     class ArticleListView(HtmxListView):
         model = Article
         template_name = "articles/list.html"
-        paginate_by = 20
+        paginate_by = 10
 
 A drop-in replacement for Django's ``ListView`` with built-in URL-based filtering, column sorting, and elided pagination.
 
@@ -23,16 +23,17 @@ Attributes
 ~~~~~~~~~~
 
 .. attribute:: fields
-    :type: Tuple[str, ...] | List[str]
+    :type: Tuple[str, ...]
 
-    The fields that are allowed for filtering and sorting. Set to ``("__all__",)`` to allow all fields.
+    The fields that are allowed for filtering and sorting. There is no wildcard/bypass
+    value — every field a view needs to expose must be listed explicitly.
 
-    ``"pk"`` is always added automatically if it isn't already present (unless ``fields`` is
-    ``"__all__"``), so rows remain uniquely identifiable even if you don't list it explicitly.
-    The ``<c-tables.htmx_table />`` component hides the ``pk`` column by default — pass
+    ``"pk"`` is always added automatically if it isn't already present, so rows remain
+    uniquely identifiable even if you don't list it explicitly. The
+    ``<c-tables.htmx_table />`` component hides the ``pk`` column by default — pass
     ``show_pk=True`` in the context to render it.
 
-    Default: ``("__all__",)``
+    Default: ``()``
 
 .. attribute:: labels
     :type: Dict[str, str] | None
@@ -41,7 +42,17 @@ Attributes
 
     Default: ``None``
 
-.. attribute:: target_id
+.. attribute:: hidden_fields
+    :type: Tuple[str, ...]
+
+    Field names (must also appear in ``fields``) to keep in the queryset projection and
+    context, but mark ``visible: False`` on so ``<c-tables.htmx_table />`` skips rendering
+    their column. Useful for fields a view needs for :meth:`get_transform_data` but
+    shouldn't display.
+
+    Default: ``()``
+
+.. attribute:: hx_target_id
     :type: str | None
 
     The HTMX target element ID for list updates. Used by Cotton components.
@@ -51,7 +62,10 @@ Attributes
 .. attribute:: paginate_by
     :type: int
 
-    Number of items per page for pagination.
+    Number of items per page for pagination. Can be overridden per-request via the
+    ``?paginate_by=`` query parameter (see below) — when set on the view, the
+    ``<c-tables.htmx_table />`` component renders a "Show N entries" selector that
+    submits this parameter.
 
     Default: ``25``
 
@@ -108,7 +122,7 @@ The view provides the following context variables for templates:
 
     The current request path.
 
-.. attribute:: target_id
+.. attribute:: hx_target_id
     :type: str | None
 
     The HTMX target element ID (from view attribute).
@@ -129,10 +143,11 @@ The view provides the following context variables for templates:
     Template-ready dict mapping plain field names to their filter values.
 
 .. attribute:: fields
-    :type: Dict[str, List[str]]
+    :type: List[Dict[str, str | bool]]
 
-    Dict with ``keys`` (list of field names, always including ``"pk"``) and ``labels``
-    (list of display names).
+    A list of ``{"name": str, "label": str, "visible": bool}`` dicts, one per field
+    from ``get_fields()`` (always including ``"pk"``). ``visible`` is ``False`` for
+    any field listed in ``hidden_fields``.
 
 .. attribute:: enable_history
     :type: bool
@@ -183,6 +198,16 @@ See :doc:`../guide/filters_sorting` for complete filter reference.
     # Specific page
     /articles/?page=2
 
+    # Override the page size (also settable from the table's "Show N entries" selector)
+    /articles/?paginate_by=50
+
+.. note::
+   ``paginate_by`` from the query string is parsed with ``int()`` and applied
+   without clamping to a min/max or to the selector's preset options
+   (``10``/``25``/``50``/``100``) — a view that exposes this to untrusted users
+   should validate the requested page size itself, e.g. in an overridden
+   :meth:`get_context_data` or :meth:`setup`.
+
 Example
 ~~~~~~~
 
@@ -194,8 +219,8 @@ Example
     class ArticleListView(HtmxListView):
         model = Article
         template_name = "articles/list.html"
-        paginate_by = 20
-        target_id = "#article-table"
+        paginate_by = 10
+        hx_target_id = "#article-table"
 
         # Restrict to these fields
         fields = ("id", "title", "status", "created_at")

@@ -1,12 +1,13 @@
 from django.db.models import QuerySet
+from django.template.defaultfilters import capfirst
 from django.views.generic import ListView
 from typing import Tuple
 from urllib.parse import urlencode
 from typing import Dict, Any, List
 
-from django_htmx_plus.utils import build_filter_dict, build_query_str, build_filters_template_dict
+from django_htmx_plus.utils import build_orm_filter_dict, build_filter_query_str, build_filters_context
 
-
+# TODO: Add optoins to sepcifiy paging stops in dropdown
 class HtmxListView(ListView):
     """A Django ListView with HTMX support for filtering, sorting, and pagination.
 
@@ -15,24 +16,31 @@ class HtmxListView(ListView):
     string preservation.
 
     Attributes:
-        target_id (str): The HTML element ID that HTMX will target for partial updates.
-        fields (Tuple[str, ...]): A tuple of model field names to include in the queryset
-            values. Use ``("__all__",)`` or leave empty to return full model instances.
-            ``"pk"`` is always added automatically (see :meth:`get_fields`) so that rows
-            remain uniquely identifiable even when not explicitly listed; templates hide
-            the ``pk`` column by default unless ``show_pk`` is truthy in the context.
+        hx_target_id (str): The HTML element ID that HTMX will target for partial updates.
+        fields (Tuple[str, ...]): A tuple of model field names allowed for filtering,
+            sorting, and inclusion in the queryset values. There is no wildcard/bypass —
+            every field a view needs to expose must be listed explicitly. ``"pk"`` is
+            always added automatically (see :meth:`get_fields`) so that rows remain
+            uniquely identifiable even when not explicitly listed; templates hide the
+            ``pk`` column by default unless ``show_pk`` is truthy in the context.
         enable_history (bool): Whether the ``header_cell``/``pager`` components should push
             sort/filter/page changes onto the browser history (``hx-push-url``). Defaults to
             ``False``; set to ``True`` to enable browser history integration for this view.
+        hidden_fields (Tuple[str, ...]): Field names (from :meth:`get_fields`) that should
+            still be included in the queryset projection and passed to the template, but
+            marked ``visible: False`` so ``<c-tables.htmx_table />`` skips rendering their
+            column. Defaults to ``()``.
 
     To post-process rows before they reach the template (e.g. annotate or reshape
     values), override :meth:`get_transform_data` rather than :meth:`get_context_data`.
     """
 
-    target_id = ""
+    hx_target_id: str = ""
     fields: Tuple[str, ...] = ()
-    labels: {}
+    labels: Dict = {}
     enable_history: bool = False
+    order_by: str | None = None
+    hidden_fields: Tuple[str, ...] = ()
 
     def __init__(self):
         """Initialise instance-level defaults for filter, query, and ordering state.
@@ -45,13 +53,20 @@ class HtmxListView(ListView):
         self.filter = {}
         self.query = ""
         self.filter_query = ""
-        self.order_by = "pk"
+        self.default_paginate_by: int = 10
 
     def setup(self, request, *args, **kwargs):
         """Initialize view attributes from the incoming request.
 
         Parses query parameters to build filter dictionaries, query strings, and
-        the active ordering field. Falls back to ``"pk"`` if no ordering is specified.
+        the active ordering field. If ``order_by`` isn't present in the query string,
+        or names a field not in the allowlist, ``self.order_by`` is left unchanged
+        (its class-level default, or ``None`` if unset) — there is no automatic
+        fallback to ``"pk"``.
+
+        If ``paginate_by`` is present in the query string, it overrides ``self.paginate_by``
+        for this request (parsed with a plain ``int()`` — no clamping to a min/max or to
+        the ``<c-tables.htmx_table />`` selector's preset options).
 
         Args:
             request: The incoming HTTP request object.
@@ -59,20 +74,23 @@ class HtmxListView(ListView):
             **kwargs: Additional keyword arguments passed to the parent ``setup``.
         """
         super(HtmxListView, self).setup(request, *args, **kwargs)
-        self.filter = build_filter_dict(request.GET, self.fields)
-        self.query = build_query_str(request.GET)
+        self.filter = self.get_filters()
+        self.query = build_filter_query_str(request.GET)
         self.filter_query = self.query
         self.order_by = getattr(self, "order_by", None)
+        self.default_paginate_by = self.paginate_by
+
+        if "paginate_by" in self.request.GET and self.paginate_by > 0:
+            try:
+                self.paginate_by = int(self.request.GET["paginate_by"])
+            except ValueError:
+                self.paginate_by = self.default_paginate_by
 
         if "order_by" in request.GET:
             candidate = request.GET.get('order_by')
             if self._is_order_by_allowed(candidate):
                 self.order_by = candidate
-
-        if not self.order_by:
-            self.order_by = "pk"
-
-        self.query += f"&order_by={self.order_by}"
+                self.query += f"&order_by={self.order_by}"
 
     def get_fields(self):
         """Return the allowed field list, guaranteeing ``"pk"`` is always included.
@@ -80,45 +98,67 @@ class HtmxListView(ListView):
         Mutates and returns ``self.fields``, prepending ``"pk"`` when it is
         missing so that filtering, ordering, and the queryset's ``.values()``
         projection always have access to a unique row identifier, even for
-        views that don't explicitly list ``"pk"`` in their ``fields``. Has no
-        effect when ``fields`` is ``"__all__"``, since no projection or
-        allowlist restriction applies in that case.
+        views that don't explicitly list ``"pk"`` in their ``fields``.
 
         Returns:
             Tuple[str, ...]: The (possibly amended) allowed field names.
         """
-        if self.fields != "__all__" and "pk" not in self.fields:
+        if "pk" not in self.fields:
             self.fields = ("pk",) + self.fields
 
         return self.fields
+
+    def get_hidden_fields(self):
+        """Return the field names that should be hidden from ``<c-tables.htmx_table />``.
+
+        Returns:
+            Tuple[str, ...]: Field names still included in the queryset and context,
+            but marked ``visible: False`` for the table template.
+        """
+        return self.hidden_fields
+
+    def get_filters(self):
+        return build_orm_filter_dict(self.request.GET, self.get_fields())
+
+    def get_query(self):
+        return self.query
+
+    def get_order_by(self):
+        return self.order_by
+
+    def get_hx_target_id(self):
+        return self.hx_target_id
+
+    def get_filter_query(self):
+        return self.filter_query
+
+    def get_labels(self):
+        return self.labels
+
+    def get_filters_data(self):
+        return build_filters_context(self.get_filters())
 
     def get_queryset(self):
         """Return the filtered and ordered queryset for the view.
 
         Applies any active filters from ``self.filter`` to the base queryset and
-        orders the result by ``self.order_by``. When :meth:`get_fields` returns a
-        non-empty tuple that does not contain ``"__all__"``, the queryset is
-        returned as a ``ValuesQuerySet`` restricted to those fields (always
-        including ``"pk"``), ensuring that columns not listed in ``fields`` are
-        never fetched from the database.
+        orders the result by ``self.order_by``. The queryset is always returned as
+        a ``ValuesQuerySet`` restricted to :meth:`get_fields` (always including
+        ``"pk"``), ensuring that columns not listed in ``fields`` are never
+        fetched from the database.
 
         Returns:
-            QuerySet: A filtered and ordered queryset, or a ``ValuesQuerySet``
-            limited to ``self.fields`` when an explicit field list is provided.
+            QuerySet: A filtered and ordered ``ValuesQuerySet`` limited to
+            :meth:`get_fields`.
         """
         qs = super(HtmxListView, self).get_queryset()
 
-        if hasattr(self, 'filter') and self.filter:
+        if self.filter:
             qs = qs.filter(**self.filter)
-        if hasattr(self, 'order_by') and self.order_by:
+        if self.order_by:
             qs = qs.order_by(self.order_by)
 
-        fields = self.get_fields()
-
-        if not fields or "__all__" in fields:
-            return qs
-
-        return qs.values(*fields)
+        return qs.values(*self.get_fields())
 
     def _is_order_by_allowed(self, order_by: str) -> bool:
         """Check whether a user-supplied ordering field is permitted.
@@ -132,19 +172,10 @@ class HtmxListView(ListView):
                 optionally prefixed with ``-`` for descending order.
 
         Returns:
-            bool: ``True`` if the field is permitted or no allowlist is active,
-                ``False`` otherwise.
+            bool: ``True`` if the field is in the allowlist, ``False`` otherwise.
         """
-        fields = self.get_fields()
-
-        if not fields:
-            return False
-
-        if fields and "__all__" in fields:
-            return True
-
         field = order_by.lstrip('-')
-        return field in fields
+        return field in self.get_fields()
 
     def get_context_data(self, **kwargs):
         """Build and return the template context dictionary.
@@ -167,12 +198,15 @@ class HtmxListView(ListView):
               ``paginate_by`` is set).
             - ``order_by`` (str): The currently active ordering field.
             - ``path`` (str): The current request path.
-            - ``target_id`` (str): The HTMX target element ID.
+            - ``hx_target_id`` (str): The HTMX target element ID.
             - ``query`` (str): Full query string including the ``order_by`` parameter.
             - ``filter_query`` (str): Query string containing only filter parameters.
             - ``filters`` (dict): Template-ready representation of active filters.
-            - ``fields`` (dict): ``keys`` (from :meth:`get_fields`, always including
-              ``"pk"``) and ``labels``.
+            - ``fields`` (list): One ``{"name", "label", "visible"}`` dict per field
+              from :meth:`get_fields` (always including ``"pk"``). ``label`` is the
+              entry from :meth:`get_labels` if present and truthy, otherwise the field
+              name run through :func:`~django.template.defaultfilters.capfirst`.
+              ``visible`` is ``False`` for any field returned by :meth:`get_hidden_fields`.
             - ``enable_history`` (bool): Whether sort/filter/page links should push
               browser history entries (``hx-push-url``).
         """
@@ -196,19 +230,30 @@ class HtmxListView(ListView):
             )
             context["paginator"].allow_empty_first_page = True
 
-        context["order_by"] = self.order_by
+        context["order_by"] = self.get_order_by()
         context["path"] = self.request.path
-        context["target_id"] = self.target_id
-        context["query"] = self.query
-        context["filter_query"] = self.filter_query
-        context["filters"] = build_filters_template_dict(self.filter)
+        context["hx_target_id"] = self.get_hx_target_id()
+        context["query"] = self.get_query()
+        context["filter_query"] = self.get_filter_query()
+        context["filters"] = self.get_filters_data()
         context["enable_history"] = self.enable_history
+        context["default_paginate_by"] = self.default_paginate_by
 
-        fields = {
-            "keys": fields,
-            "labels": self.labels,
-        }
-        context["fields"] = fields
+        labels = self.get_labels()
+
+        context["fields"] = []
+        hidden_fields = self.get_hidden_fields()
+        for field in fields:
+            field_def = {
+                "name": field,
+                "label": labels.get(field) or capfirst(field),
+                "visible": True
+            }
+
+            if field in hidden_fields:
+                field_def["visible"] = False
+
+            context["fields"].append(field_def)
 
         return context
 

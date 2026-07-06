@@ -200,11 +200,5 @@ The ``fields`` attribute on ``HtmxListView`` controls which fields can be filter
     class ArticleListView(HtmxListView):
         fields = ("title", "status", "created_at")  # Only these fields can be filtered
 
-Set to ``("__all__",)`` to allow filtering on all fields (use with caution):
-
-.. code-block:: python
-
-    class ArticleListView(HtmxListView):
-        fields = ("__all__",)  # Allow any field
-
-Invalid field names in filter parameters are silently ignored for security.
+There is no wildcard/bypass value — every field must be listed explicitly. Invalid field
+names in filter parameters are silently ignored for security.

@@ -171,14 +171,14 @@ Use Bootstrap table utilities:
 Advanced: Multiple Tables on Same Page
 =======================================
 
-Each table needs a unique ``target_id``:
+Each table needs a unique ``hx_target_id``:
 
 .. code-block:: python
 
     class DraftArticleListView(HtmxListView):
         model = Article
         template_name = "article/drafts.html"
-        target_id = "#draft-table"
+        hx_target_id = "#draft-table"
 
         def get_queryset(self):
             return super().get_queryset().filter(status="draft")
@@ -188,7 +188,7 @@ Each table needs a unique ``target_id``:
     class PublishedArticleListView(HtmxListView):
         model = Article
         template_name = "article/published.html"
-        target_id = "#published-table"
+        hx_target_id = "#published-table"
 
         def get_queryset(self):
             return super().get_queryset().filter(status="published")
@@ -257,7 +257,7 @@ Best Practices
 
 1. **Use complete table component for simple cases** – Saves boilerplate
 2. **Build custom tables for complex layouts** – Maximum flexibility
-3. **Set unique target_id per table** – Ensures correct HTMX targeting
+3. **Set unique hx_target_id per table** – Ensures correct HTMX targeting
 4. **Use meaningful sort fields** – Not all fields need sorting
 5. **Add HTMX triggers for automatic updates** – Keeps UI in sync
 6. **Test sorting and pagination** – Ensure query string handling works

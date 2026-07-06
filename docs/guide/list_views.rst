@@ -17,8 +17,8 @@ Create a filterable list view with sorting and pagination:
     class ArticleListView(HtmxListView):
         model = Article
         template_name = "article/list.html"
-        paginate_by = 20
-        target_id = "#article-table"
+        paginate_by = 10
+        hx_target_id = "#article-table"
 
         # Restrict to these fields only
         fields = ("id", "title", "status", "created_at")
@@ -47,8 +47,8 @@ Since ``"pk"`` is always added to ``fields`` at the beginning of the fields list
     class ArticleListView(HtmxListView):
         model = Article
         template_name = "article/list.html"
-        paginate_by = 20
-        target_id = "#article-table"
+        paginate_by = 10
+        hx_target_id = "#article-table"
 
         # Restrict to these fields only
         fields = ("id", "title", "status", "pk", "created_at")
@@ -119,6 +119,30 @@ The view provides:
 - ``paginator`` – Paginator instance
 - ``page_range`` – Elided page numbers (shows first, last, and pages around current)
 
+Changing the Page Size
+=======================
+
+Whenever ``paginate_by`` is set (so the view is paginated), ``<c-tables.htmx_table />``
+renders a "Show N entries" ``<select>`` above the table with options for ``10``,
+``25``, ``50``, and ``100`` rows per page. Choosing an option issues an
+``hx-get`` with a ``paginate_by`` query parameter, which the view applies for
+that request:
+
+.. code-block:: text
+
+    /articles/?paginate_by=50
+
+Once a non-default page size is active, subsequent sort/page links (rendered by
+``header_cell`` and ``pager``) carry the same ``paginate_by`` forward so the
+chosen page size persists across sorting and paging.
+
+.. attention::
+   The view applies ``paginate_by`` from the query string via a plain ``int()``
+   conversion — there's no clamping to the selector's preset options or to any
+   min/max. If this view is reachable by untrusted users, override
+   :meth:`get_context_data` (or :meth:`setup`) to validate/clamp the requested
+   value before it reaches ``Paginator``.
+
 Browser History (Back/Forward Navigation)
 ==========================================
 
@@ -126,6 +150,15 @@ Sorting, pagination, and filtering can update the URL query string and push a
 new browser history entry for each change (via ``hx-push-url`` on the
 ``header_cell``/``pager`` components), so the address bar reflects the
 current table state and can be bookmarked or shared.
+
+The "Show N entries" selector pushes history a little differently: its
+selected value isn't known server-side until after the request fires, so
+rather than a static ``hx-push-url`` it carries a ``data-htmx-plus-push-url``
+attribute (the page/query string, without the page size), and
+:doc:`../api/javascript`'s shared script appends the selector's live value
+and calls ``history.pushState`` once the request succeeds. This avoids
+pushing the element's ``hx-get`` fetch path itself (which may point at a
+different partial-fetch endpoint than the page's own URL).
 
 This is opt-in — set ``enable_history = True`` on the view to turn it on:
 
@@ -144,7 +177,7 @@ modals or alongside other independently-updating widgets on a page.
 For the Back/Forward buttons to actually restore the table once history is
 enabled, add ``hx-history-elt`` to the element wrapping
 ``<c-tables.htmx_table />`` — the same element that carries your
-``target_id``:
+``hx_target_id``:
 
 .. code-block:: html
 
@@ -206,7 +239,7 @@ Provide custom display labels for fields:
     class ArticleListView(HtmxListView):
         model = Article
         template_name = "article/list.html"
-        paginate_by = 20
+        paginate_by = 10
 
         fields = ("id", "title", "status", "created_at", "author")
 
@@ -216,20 +249,31 @@ Provide custom display labels for fields:
             "author": "Written by",
         }
 
-The labels are used by Cotton components and available in ``context['fields']['labels']``.
+The labels are used by Cotton components via ``context['fields']``, a list of
+``{"name", "label", "visible"}`` dicts — one per field in ``fields``. ``label`` is the
+entry from ``labels`` if present and truthy, otherwise the field name run through
+Django's ``capfirst`` filter.
 
-Advanced: Allowing All Fields
-=============================
+``HtmxListView`` always requires you to explicitly list allowed fields (for security) —
+there is no wildcard or bypass value. Any field a view needs to filter, sort, or display
+must appear in ``fields``.
 
-By default, ``HtmxListView`` requires you to explicitly list allowed fields (for security). To allow any field:
+Advanced: Hiding Fields
+=======================
+
+Include a field in the queryset and context (e.g. so :meth:`get_transform_data` can use
+it) without rendering a column for it:
 
 .. code-block:: python
 
     class ArticleListView(HtmxListView):
         model = Article
-        fields = ("__all__",)  # Allow filtering/sorting on any field
+        fields = ("id", "title", "status", "author_id")
+        hidden_fields = ("author_id",)
 
-Use this with caution in production apps, as it exposes all model fields to filtering.
+``hidden_fields`` doesn't remove the field from filtering, sorting, or the queryset
+projection — it only sets ``visible: False`` on that field's entry in ``context['fields']``,
+which ``<c-tables.htmx_table />`` uses to skip rendering its header and cells.
 
 Advanced: Custom Filtering Logic
 =================================
@@ -287,7 +331,7 @@ and must return the list of rows for the template.
 Best Practices
 ==============
 
-1. **Set ``target_id`` for HTMX updates** – helps routing of swap requests
+1. **Set ``hx_target_id`` for HTMX updates** – helps routing of swap requests
 2. **Use specific field restrictions** – only allow filtering on intended fields
 3. **Provide custom labels** – makes the table headers more user-friendly
 4. **Test edge cases** – empty results, invalid filters, etc.
