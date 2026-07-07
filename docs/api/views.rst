@@ -274,3 +274,36 @@ template, without re-implementing filtering or pagination:
 
 ``get_transform_data`` receives the current page's queryset (or values queryset) and must
 return the list of rows to render.
+
+Custom / Dynamic Querysets
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The default ``get_queryset()`` resolves the view's base queryset (from ``self.queryset``
+or ``self.model``), then applies URL-based filtering, ``order_by``, and the ``fields``
+projection via :meth:`queryset_values`. To supply a fully custom or dynamic queryset —
+a different manager, ``select_related``/``prefetch_related``, per-user logic — override
+``get_queryset()`` without calling ``super()``, and pass your queryset through
+:meth:`queryset_values` to opt back into the view's automatic filtering/sorting:
+
+.. code-block:: python
+
+    class ArticleListView(HtmxListView):
+        model = Article
+        fields = ("title", "status", "created_at")
+
+        def get_queryset(self):
+            queryset = Article.objects.select_related("author") if self.request.user.is_staff \
+                else Article.published.select_related("author")
+            return self.queryset_values(queryset)
+
+.. method:: queryset_values(queryset)
+
+    Applies ``self.filter`` (parsed from the URL's ``field.filter_type=value`` query
+    parameters), orders the result by ``self.order_by``, and restricts the projection to
+    :meth:`get_fields` (always including ``"pk"``). Call this from a fully overridden
+    ``get_queryset()`` to get the same automatic filter/order_by/values behavior as the
+    default implementation.
+
+    If you skip ``queryset_values()`` and return a queryset directly, remember that
+    without the final ``.values(*fields)`` step, full model instances are returned
+    instead of the ``fields``-restricted dicts templates expect.

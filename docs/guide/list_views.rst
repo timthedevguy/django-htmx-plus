@@ -307,6 +307,46 @@ For complex filtering, override ``get_queryset()``:
 
 The base implementation handles URL-based filters; your custom logic runs after.
 
+Advanced: Dynamic / Custom Querysets
+=====================================
+
+The pattern above works when you're narrowing the view's own queryset with one more
+``.filter()`` call. For anything more involved — a different manager,
+``select_related``/``prefetch_related``, joins, or building the queryset from scratch
+based on ``self.request`` — override ``get_queryset()`` without calling ``super()`` at
+all, the same way you would on a plain Django ``ListView``:
+
+.. code-block:: python
+
+    class ArticleListView(HtmxListView):
+        model = Article
+        fields = ("title", "status", "created_at")
+
+        def get_queryset(self):
+            if self.request.user.is_staff:
+                queryset = Article.objects.select_related("author")
+            else:
+                queryset = Article.published.select_related("author")
+
+            # Apply the view's URL-based filter/order_by and the `fields` projection
+            return self.queryset_values(queryset)
+
+Because this override doesn't call ``super().get_queryset()``, none of the view's
+automatic behavior runs unless you add it back yourself. ``queryset_values(queryset)``
+is that behavior, extracted into its own method: it applies ``self.filter`` (parsed from
+the URL's ``field.filter_type=value`` query parameters), orders by ``self.order_by``,
+and restricts the projection to :meth:`get_fields` (always including ``"pk"``) — the
+exact steps the default ``get_queryset()`` implementation performs. Returning
+``self.queryset_values(queryset)`` from your override gets you URL-based
+filtering/sorting "for free" on top of whatever custom queryset you built.
+
+If you'd rather not apply URL-based filtering/sorting at all — or want to apply it
+differently — you can skip ``queryset_values()`` and call ``.filter()``/``.order_by()``
+yourself instead. Just remember that skipping the final ``.values(*fields)`` step means
+full model instances are returned instead of the ``fields``-restricted dicts templates
+expect (see :meth:`get_transform_data` below, which receives whatever ``get_queryset()``
+returns).
+
 Advanced: Transforming Rows
 ============================
 

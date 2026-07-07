@@ -147,18 +147,44 @@ class HtmxListView(ListView):
         ``"pk"``), ensuring that columns not listed in ``fields`` are never
         fetched from the database.
 
+        If you override this method to provide a custom or dynamic queryset (e.g.
+        a different manager, joins, per-user filtering, annotations), you should
+        either apply ``self.filter`` and ``self.order_by`` to it yourself, or call
+        ``return self.queryset_values(queryset)`` at the end of your override to
+        apply them automatically.
+
         Returns:
             QuerySet: A filtered and ordered ``ValuesQuerySet`` limited to
             :meth:`get_fields`.
         """
-        qs = super(HtmxListView, self).get_queryset()
+        qs = self.queryset
+        if not qs and self.model:
+            qs = self.model.objects.all()
+        return self.queryset_values(qs)
 
+
+    def queryset_values(self, qs: QuerySet) -> QuerySet | None:
+        """Apply the htmx-plus filter/order_by/values pipeline to a queryset.
+
+        Applies any active filters from ``self.filter``, orders by ``self.order_by``,
+        and restricts the projection to :meth:`get_fields` (always including
+        ``"pk"``). Call this from an overridden :meth:`get_queryset` after
+        constructing a custom base queryset, to opt into the same automatic
+        filter/order_by/values behavior as the default implementation.
+
+        Args:
+            qs (QuerySet): The queryset to filter, order, and project.
+
+        Returns:
+            QuerySet: A filtered and ordered ``ValuesQuerySet`` limited to
+            :meth:`get_fields`.
+        """
         if self.filter:
             qs = qs.filter(**self.filter)
         if self.order_by:
             qs = qs.order_by(self.order_by)
-
         return qs.values(*self.get_fields())
+
 
     def _is_order_by_allowed(self, order_by: str) -> bool:
         """Check whether a user-supplied ordering field is permitted.
