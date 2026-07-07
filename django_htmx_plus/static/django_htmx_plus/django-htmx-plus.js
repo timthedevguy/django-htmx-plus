@@ -51,7 +51,7 @@ htmx.on("htmx:afterRequest", (e) => {
     // URL, e.g. a nested partial-fetch endpoint).
     let element = null;
 
-    if(e.detail.requestConfig.triggeringEvent.srcElement) {
+    if(e.detail?.requestConfig?.triggeringEvent?.srcElement) {
         if (e.detail.requestConfig.triggeringEvent.srcElement.id === "django-htmx-plus-paginate-select") {
             element = e.detail.requestConfig.triggeringEvent.srcElement;
         }
