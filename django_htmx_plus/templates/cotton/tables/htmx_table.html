@@ -22,7 +22,7 @@
 		{% for field in fields %}
 			{% if field.visible is True %}
 				{% if field.name != "pk" or show_pk is True %}
-					<c-tables.header_cell name="{{ field.name }}">{{ field.label }}</c-tables.header_cell>
+					<c-tables.header_cell add_class="{{ hx_target_id|cut:"#" }}-{{ field.name }}-col" name="{{ field.name }}">{{ field.label }}</c-tables.header_cell>
 				{% endif %}
 			{% endif %}
 		{% endfor %}
@@ -33,7 +33,7 @@
 			{% for field in fields %}
 				{% if field.visible is True %}
 					{% if field.name != "pk" or show_pk is True %}
-						<td>{{ item|get_key_value:field.name }}</td>
+						<td class="{{ hx_target_id|cut:"#" }}-{{ field.name }}-col">{{ item|get_key_value:field.name }}</td>
 					{% endif %}
 				{% endif %}
 			{% endfor %}
