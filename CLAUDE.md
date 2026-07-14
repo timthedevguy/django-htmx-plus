@@ -58,7 +58,7 @@ The package has two halves that are meant to be used together but are independen
 **Template/JS side**:
 - [templates/cotton/tables/](django_htmx_plus/templates/cotton/tables/) — `htmx_table` (full table), `header_cell` (sortable `<th>` that toggles `order_by=field` / `-field` via `hx-get`), `pager` (Bootstrap pagination wired to `hx-get`). These consume the context dict built by `HtmxListView.get_context_data` (`fields`, `object_list`, `order_by`, `path`, `filter_query`, `hx_target_id`, `page_obj`, `paginator`) — the view and templates are tightly coupled through this contract, so changing context keys in `views.py` requires updating the templates too.
 - [templates/cotton/icons/](django_htmx_plus/templates/cotton/icons/) — chevron icon components used by `header_cell` and `pager`.
-- [static/django_htmx_plus/django-htmx-plus.js](django_htmx_plus/static/django_htmx_plus/django-htmx-plus.js) — ES module wiring Bootstrap 5 `Modal`/`Offcanvas` show/hide to HTMX swap events via `data-htmx-plus-modal`/`data-htmx-plus-offcanvas` attributes. Imports `bootstrap` as an ES module (import map required by consumers, not bundled here).
+- [static/django_htmx_plus/django-htmx-plus.js](django_htmx_plus/static/django_htmx_plus/django-htmx-plus.js) — ES module wiring Bootstrap 5 `Modal`/`Offcanvas` show/hide to HTMX swap events via `data-htmx-plus-modal`/`data-htmx-plus-offcanvas` attributes. Reads `window.bootstrap.Modal`/`window.bootstrap.Offcanvas`, so consumers just need Bootstrap 5's regular JS bundle loaded (no import map or bundler needed).
 
 ## Key conventions
 

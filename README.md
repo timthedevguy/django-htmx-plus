@@ -344,18 +344,12 @@ This renders:
 
 If a `nonce` variable is present in the template context it is automatically added as a `nonce="..."` attribute.
 
-> **Note:** The script imports `Modal` and `Offcanvas` from `bootstrap`, so Bootstrap 5 must be available as an ES module (e.g. via an import map or a bundler). If you load Bootstrap as a plain global script instead, adjust your bundler or import map accordingly.
+> **Note:** The script reads `Modal` and `Offcanvas` off `window.bootstrap`, so Bootstrap 5's regular JS bundle must be loaded (as a plain `<script>`, before `{% htmx_plus_script %}`) so it can attach itself to `window.bootstrap`. No import map or bundler is required.
 
 For example
 ```html
-<script type="importmap">
-{
-  "imports": {
-	"@popperjs/core": "{% static '@popperjs/core/dist/esm/index.js' %}",
-	"bootstrap": "{% static 'bootstrap/js/index.esm.js' %}",
-  }
-}
-</script>
+<script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+{% htmx_plus_script %}
 ```
 ---
 

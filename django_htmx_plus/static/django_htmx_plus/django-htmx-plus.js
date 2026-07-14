@@ -1,13 +1,11 @@
-import {Modal, Offcanvas} from 'bootstrap';
-
 const dialogs = {}
 
 for (const element of document.querySelectorAll('[data-htmx-plus-modal]')) {
-    dialogs[element.dataset.htmxPlusModal] = new Modal(element);
+    dialogs[element.dataset.htmxPlusModal] = new window.bootstrap.Modal(element);
 }
 
 for (const element of document.querySelectorAll('[data-htmx-plus-offcanvas]'))  {
-    dialogs[element.dataset.htmxPlusOffcanvas] = new Offcanvas(element);
+    dialogs[element.dataset.htmxPlusOffcanvas] = new window.bootstrap.Offcanvas(element);
 }
 
 htmx.on("htmx:afterSwap", (e) => {

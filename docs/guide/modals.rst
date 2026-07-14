@@ -9,6 +9,11 @@ Setup
 
 The ``django-htmx-plus.js`` module automatically handles showing/hiding Bootstrap 5 modals when HTMX swaps content.
 
+.. note::
+   Bootstrap 5's regular JS bundle (``bootstrap.bundle.min.js``) must be loaded
+   before ``{% htmx_plus_script %}`` so that it attaches itself to
+   ``window.bootstrap``. No import map or ES module setup is required.
+
 Base Template Setup
 ~~~~~~~~~~~~~~~~~~~
 
@@ -24,15 +29,6 @@ Base Template Setup
         <title>{% block title %}My App{% endblock %}</title>
         <!-- Bootstrap CSS -->
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-        <!-- Import map for ES modules -->
-        <script type="importmap">
-        {
-          "imports": {
-            "@popperjs/core": "https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/esm/index.mjs",
-            "bootstrap": "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/esm/index.mjs"
-          }
-        }
-        </script>
     </head>
     <body>
         <!-- Modal -->

@@ -45,32 +45,22 @@ With optional CSP nonce if present in template context:
 Requirements
 ~~~~~~~~~~~~
 
-- Bootstrap 5 available as an ES module
+- Bootstrap 5 JS loaded before the script, exposing a global ``window.bootstrap``
 - HTMX library loaded before the script
-- Either an import map or bundler that provides Bootstrap as an ES module
 
-Setup with Import Map
-~~~~~~~~~~~~~~~~~~~~~~~
+Setup
+~~~~~
 
-If loading Bootstrap as a global script, use an import map to make it available as an ES module:
+Load Bootstrap's regular (non-module) bundle, which attaches ``bootstrap`` to
+``window`` automatically, then include the script tag:
 
 .. code-block:: html
 
-    <script type="importmap">
-    {
-      "imports": {
-        "@popperjs/core": "{% static '@popperjs/core/dist/esm/index.js' %}",
-        "bootstrap": "{% static 'bootstrap/js/index.esm.js' %}",
-      }
-    }
-    </script>
-
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
     {% htmx_plus_script %}
 
-Setup with Bundler
-~~~~~~~~~~~~~~~~~~~
-
-If using a bundler (Webpack, Vite, etc.), ensure Bootstrap is installed as an npm package and the bundler resolves the import correctly.
+No import map or bundler is required — the script reads ``window.bootstrap.Modal``
+and ``window.bootstrap.Offcanvas`` directly.
 
 Modal Configuration
 ===================
