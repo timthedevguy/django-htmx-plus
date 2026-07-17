@@ -182,7 +182,11 @@ class HtmxListView(ListView):
         if self.filter:
             qs = qs.filter(**self.filter)
         if self.order_by:
-            qs = qs.order_by(self.order_by)
+            pk_order = "pk"
+            if self.order_by.startswith("-"):
+                pk_order = "-pk"
+
+            qs = qs.order_by(self.order_by, pk_order)
         return qs.values(*self.get_fields())
 
 
